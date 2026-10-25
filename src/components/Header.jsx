@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Volume2, Volume1, VolumeX, Settings, Keyboard, Trophy, Flame, Layers, Maximize2, Minimize2, Radio, Monitor, Gamepad2, Swords, Crosshair, Tv } from 'lucide-react';
+import { Volume2, Volume1, VolumeX, Settings, Keyboard, Trophy, Flame, Layers, Maximize2, Minimize2, Monitor, Gamepad2, Swords, Crosshair, Tv, Globe } from 'lucide-react';
 import { soundFX } from '../utils/audio';
+import { getTranslation } from '../i18n/translations';
 
 export default function Header({
   soundEnabled,
@@ -18,8 +19,11 @@ export default function Header({
   onToggleOverlay,
   displaysInfo,
   onSwitchDisplay,
-  isWarmup
+  isWarmup,
+  language = 'en',
+  onToggleLanguage
 }) {
+  const t = getTranslation(language);
   const isValRunning = valorantStatus?.running;
   const isDeathmatch = valorantStatus?.inDeathmatch;
   const isInGame = valorantStatus?.isInGame;
@@ -47,14 +51,14 @@ export default function Header({
                 GUN <span className="text-[#ff4655]">ROULETTE</span>
               </span>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#ff4655]/15 text-[#ff4655] border border-[#ff4655]/30">
-                Deathmatch Tracker
+                {t.deathmatchTracker}
               </span>
             </div>
             <p className="text-xs text-[#5bb2d6] hidden sm:block">
               {playerName ? (
-                <span>Conectado: <strong className="text-white font-mono">{playerName}</strong></span>
+                <span>{language === 'es' ? 'Conectado:' : 'Connected:'} <strong className="text-white font-mono">{playerName}</strong></span>
               ) : (
-                'Progresión de Armas • In-Game Challenge'
+                language === 'es' ? 'Progresión de Armas • Reto In-Game' : 'Weapon Progression • In-Game Challenge'
               )}
             </p>
           </div>
@@ -65,14 +69,14 @@ export default function Header({
           {/* Tiers Progress */}
           <div className="flex items-center gap-1.5 text-xs text-slate-300 pr-3 border-r border-[#233544]">
             <Layers className="w-3.5 h-3.5 text-[#5bb2d6]" />
-            <span>Fase:</span>
+            <span>{language === 'es' ? 'Fase:' : 'Tier:'}</span>
             <span className="font-mono font-bold text-white">{currentTierIndex + 1} / {totalTiers}</span>
           </div>
 
-          {/* Racha de Victorias */}
+          {/* Victories */}
           <div className="flex items-center gap-1.5 text-xs text-slate-300 pr-3 border-r border-[#233544]">
             <Trophy className="w-3.5 h-3.5 text-amber-400" />
-            <span>Rachas:</span>
+            <span>{language === 'es' ? 'Victorias:' : 'Runs:'}</span>
             <span className="font-mono font-bold text-amber-300">{stats.completedRuns}</span>
           </div>
 
@@ -101,15 +105,6 @@ export default function Header({
                   : 'bg-[#152331] border-[#5bb2d6]/40 text-[#5bb2d6]'
                 : 'bg-[#101b26] border-[#233544] text-slate-400'
             }`}
-            title={
-              isWarmup
-                ? 'Fase de CALENTAMIENTO activa en Valorant. El reto y conteo de bajas están pausados.'
-                : isValRunning 
-                ? isDeathmatch
-                  ? isInGame ? '¡Combate a Muerte en curso! La ruleta está sincronizada con tu partida.' : 'Combate a Muerte seleccionado (En Lobby o buscando partida)'
-                  : `VALORANT en ejecución • Modo: ${valorantStatus?.queueId || 'Menú'}`
-                : 'VALORANT no está detectado en segundo plano'
-            }
           >
             {isWarmup ? (
               <span className="text-amber-400 font-bold animate-pulse text-xs">⏳</span>
@@ -125,17 +120,17 @@ export default function Header({
               <span className={`w-2 h-2 rounded-full ${isWarmup ? 'bg-amber-400 animate-pulse' : isValRunning ? 'bg-[#00f59b] animate-ping' : 'bg-slate-600'}`} />
               <span className="font-bold">
                 {isWarmup ? (
-                  'DM: Calentamiento (Pausado)'
+                  language === 'es' ? 'DM: Calentamiento (Pausado)' : 'DM: Warmup (Paused)'
                 ) : !isValRunning ? (
-                  'VALORANT: Cerrado'
+                  language === 'es' ? 'VALORANT: Cerrado' : 'VALORANT: Closed'
                 ) : isDeathmatch && isInGame ? (
-                  'DM: En Partida'
+                  language === 'es' ? 'DM: En Partida' : 'DM: In Match'
                 ) : isDeathmatch ? (
-                  'DM: Listo en Menú'
+                  language === 'es' ? 'DM: Listo en Menú' : 'DM: Ready in Menu'
                 ) : valorantStatus?.queueId ? (
                   `Val: ${valorantStatus.queueId}`
                 ) : (
-                  'VALORANT: En Juego'
+                  language === 'es' ? 'VALORANT: En Juego' : 'VALORANT: In Game'
                 )}
               </span>
             </div>
@@ -149,19 +144,9 @@ export default function Header({
               <button
                 onClick={onSwitchDisplay}
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono font-bold bg-[#121f2c] border border-[#23384c] text-slate-200 hover:border-[#5bb2d6] transition-all cursor-pointer"
-                title="Cambiar monitor donde aparece el overlay in-game (Monitor 1 o Pantalla 2 Valorant)"
               >
                 <Tv className={`w-3.5 h-3.5 ${isValScreen ? 'text-[#00f59b]' : 'text-[#5bb2d6]'}`} />
-                <span>{isValScreen ? 'Pantalla 2' : 'Pantalla 1'}</span>
-                {isValScreen ? (
-                  <span className="text-[9px] bg-[#00f59b]/20 text-[#00f59b] px-1 py-0.2 rounded border border-[#00f59b]/40 font-mono">
-                    Valorant
-                  </span>
-                ) : (
-                  <span className="text-[9px] bg-slate-800 text-slate-400 px-1 py-0.2 rounded border border-slate-700 font-mono">
-                    Principal
-                  </span>
-                )}
+                <span>{isValScreen ? (language === 'es' ? 'Pantalla 2' : 'Display 2') : (language === 'es' ? 'Pantalla 1' : 'Display 1')}</span>
               </button>
             );
           })()}
@@ -174,7 +159,7 @@ export default function Header({
                 ? 'bg-[#00f59b]/20 border-[#00f59b] text-[#00f59b] shadow-lg shadow-[#00f59b]/20'
                 : 'bg-[#111c26] border-[#233544] text-slate-400 hover:text-white hover:border-slate-500'
             }`}
-            title="Abrir o cerrar la UI Flotante / Overlay transparente en pantalla (Tecla F7)"
+            title={language === 'es' ? 'Abrir o cerrar la UI Flotante / Overlay transparente en pantalla (Tecla F7)' : 'Toggle In-Game Floating Overlay (Hotkey: F7)'}
           >
             <Monitor className="w-3.5 h-3.5" />
             <span>Overlay {isOverlayActive ? 'ON' : 'OFF'}</span>
@@ -184,6 +169,16 @@ export default function Header({
 
         {/* Controls / Options */}
         <div className="flex items-center gap-2">
+          {/* Quick Language Toggle (EN / ES) */}
+          <button
+            onClick={onToggleLanguage}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded border bg-[#111c26] text-xs font-bold font-mono text-[#5bb2d6] border-[#233544] hover:border-[#5bb2d6] hover:bg-[#182836] transition-all cursor-pointer"
+            title={language === 'es' ? 'Cambiar a English' : 'Switch to Español'}
+          >
+            <Globe className="w-3.5 h-3.5 text-[#5bb2d6]" />
+            <span className="uppercase">{language}</span>
+          </button>
+
           {/* Sound Control & Volume Slider */}
           <div className="flex items-center gap-1.5 bg-[#111c26] border border-[#233544] px-2 py-1 rounded">
             <button
@@ -196,7 +191,7 @@ export default function Header({
                 }
               }}
               className="text-slate-400 hover:text-white transition-colors cursor-pointer"
-              title={soundEnabled ? 'Silenciar sonidos' : 'Activar sonidos'}
+              title={soundEnabled ? t.soundToggleOn : t.soundToggleOff}
             >
               {!soundEnabled || volume === 0 ? (
                 <VolumeX className="w-4 h-4 text-slate-500" />
@@ -219,7 +214,6 @@ export default function Header({
                 if (!soundEnabled && v > 0) setSoundEnabled(true);
               }}
               className="w-14 sm:w-16 h-1.5 bg-[#0c141c] rounded-lg appearance-none cursor-pointer accent-[#00f59b]"
-              title={`Volumen: ${Math.round((soundEnabled ? volume : 0) * 100)}%`}
             />
           </div>
 
@@ -227,7 +221,7 @@ export default function Header({
           <button
             onClick={() => setIsCompactMode(!isCompactMode)}
             className="p-2 rounded border bg-[#111c26] text-slate-300 border-[#233544] hover:border-[#5bb2d6] hover:text-white transition-colors cursor-pointer"
-            title={isCompactMode ? 'Modo Normal (Pantalla completa)' : 'Modo Mini-HUD / Flotante'}
+            title={t.compactMode}
           >
             {isCompactMode ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
           </button>
@@ -236,7 +230,7 @@ export default function Header({
           <button
             onClick={onOpenShortcuts}
             className="p-2 rounded border bg-[#111c26] text-slate-300 border-[#233544] hover:border-[#ff4655] hover:text-white transition-colors cursor-pointer"
-            title="Ver atajos de teclado para jugar (F7, F8, F9, F10)"
+            title={t.shortcuts}
           >
             <Keyboard className="w-4 h-4" />
           </button>
@@ -245,7 +239,7 @@ export default function Header({
           <button
             onClick={onOpenSettings}
             className="p-2 rounded border bg-[#111c26] text-slate-300 border-[#233544] hover:border-[#00f59b] hover:text-white transition-colors cursor-pointer"
-            title="Configuración de reto"
+            title={t.settings}
           >
             <Settings className="w-4 h-4" />
           </button>

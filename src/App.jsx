@@ -14,15 +14,49 @@ import ShortcutsModal from './components/ShortcutsModal';
 import AllWeaponsBoard from './components/AllWeaponsBoard';
 import InGameToastHUD from './components/InGameToastHUD';
 import KillfeedCalibrationBox from './components/KillfeedCalibrationBox';
+import { getTranslation } from './i18n/translations';
 
 export default function App() {
-  // Configuration
-  const [config, setConfig] = useState({
-    minKills: 2,
-    maxKills: 5,
-    minDeaths: 1,
-    maxDeaths: 3
+  // Configuration with English as Default and local persistence
+  const [config, setConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem('valorant_roulette_config');
+      if (saved) {
+        return { language: 'en', minKills: 2, maxKills: 5, minDeaths: 1, maxDeaths: 3, ...JSON.parse(saved) };
+      }
+    } catch {}
+    return {
+      language: 'en',
+      minKills: 2,
+      maxKills: 5,
+      minDeaths: 1,
+      maxDeaths: 3
+    };
   });
+
+  const language = config.language || 'en';
+  const t = getTranslation(language);
+
+  const handleToggleLanguage = useCallback(() => {
+    setConfig(prev => {
+      const nextLang = prev.language === 'en' ? 'es' : 'en';
+      const updated = { ...prev, language: nextLang };
+      try {
+        localStorage.setItem('valorant_roulette_config', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }, []);
+
+  const handleLanguageChange = useCallback((newLang) => {
+    setConfig(prev => {
+      const updated = { ...prev, language: newLang };
+      try {
+        localStorage.setItem('valorant_roulette_config', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  }, []);
 
   const [activeCategoryIds, setActiveCategoryIds] = useState(
     WEAPON_CATEGORIES.map(c => c.id)
@@ -863,7 +897,7 @@ export default function App() {
       {/* 3-Second Tactical Toast Notification */}
       {/* In Electron mode, toast renders directly on Pantalla 2 (Valorant). Render here only in browser preview or compact mode */}
       {((typeof window !== 'undefined' && !window.electronAPI) || isCompactMode) && (
-        <InGameToastHUD toast={toast} onClose={() => setToast(null)} />
+        <InGameToastHUD toast={toast} onClose={() => setToast(null)} language={language} />
       )}
 
       {/* 3-Second Gray Killfeed Calibration Box (Top Right) */}
@@ -893,6 +927,8 @@ export default function App() {
         displaysInfo={displaysInfo}
         onSwitchDisplay={handleSwitchDisplay}
         isWarmup={isWarmup}
+        language={language}
+        onToggleLanguage={handleToggleLanguage}
       />
 
       {/* Main Container */}
@@ -909,6 +945,7 @@ export default function App() {
           canUndo={undoStack.length > 0}
           currentTierIndex={currentTierIndex}
           totalTiers={stages.length}
+          language={language}
         />
 
         {/* 2-Column Section: Valorant Tracker Weapon List + Sandbox Simulator */}
@@ -919,6 +956,7 @@ export default function App() {
             <WeaponList
               stages={stages}
               currentTierIndex={currentTierIndex}
+              language={language}
             />
           </div>
 
@@ -939,6 +977,7 @@ export default function App() {
               isOverwolfActive={overwolfService.isInDeathmatch}
               isOverlayActive={isOverlayActive}
               onToggleOverlay={handleToggleOverlay}
+              language={language}
             />
           </div>
 
@@ -948,6 +987,7 @@ export default function App() {
         <AllWeaponsBoard
           stages={stages}
           currentStage={currentStage}
+          language={language}
         />
 
       </main>
@@ -963,6 +1003,7 @@ export default function App() {
           onCloseCompact={() => setIsCompactMode(false)}
           currentTierIndex={currentTierIndex}
           totalTiers={stages.length}
+          language={language}
         />
       )}
 
@@ -976,7 +1017,7 @@ export default function App() {
           const cats = WEAPON_CATEGORIES.filter(c => activeCategoryIds.includes(c.id));
           setStages(generateFullRun(cats, newConfig));
           setCurrentTierIndex(0);
-          addLog('⚙️ Configuración actualizada y nueva partida generada.', 'info');
+          addLog(newConfig.language === 'es' ? '⚙️ Configuración actualizada y nueva partida generada.' : '⚙️ Settings updated and fresh match generated.', 'info');
         }}
         activeCategories={activeCategoryIds}
         onChangeActiveCategories={(newCats) => {
@@ -985,12 +1026,15 @@ export default function App() {
           setStages(generateFullRun(cats, config));
           setCurrentTierIndex(0);
         }}
+        language={language}
+        onLanguageChange={handleLanguageChange}
       />
 
       {/* Keyboard Shortcuts Modal */}
       <ShortcutsModal
         isOpen={isShortcutsOpen}
         onClose={() => setIsShortcutsOpen(false)}
+        language={language}
       />
 
     </div>

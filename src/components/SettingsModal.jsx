@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Check, Sliders, RefreshCw, Volume2, Volume1, VolumeX } from 'lucide-react';
+import { X, Check, Sliders, Volume2, Volume1, VolumeX, Globe } from 'lucide-react';
 import { WEAPON_CATEGORIES } from '../data/weaponsData';
 import { soundFX } from '../utils/audio';
+import { getTranslation } from '../i18n/translations';
 
 export default function SettingsModal({
   isOpen,
@@ -9,15 +10,20 @@ export default function SettingsModal({
   config,
   onSaveConfig,
   activeCategories,
-  onChangeActiveCategories
+  onChangeActiveCategories,
+  language = 'en',
+  onLanguageChange
 }) {
   if (!isOpen) return null;
+
+  const t = getTranslation(language);
 
   const [minKills, setMinKills] = useState(config.minKills);
   const [maxKills, setMaxKills] = useState(config.maxKills);
   const [minDeaths, setMinDeaths] = useState(config.minDeaths);
   const [maxDeaths, setMaxDeaths] = useState(config.maxDeaths);
   const [selectedCats, setSelectedCats] = useState([...activeCategories]);
+  const [selectedLang, setSelectedLang] = useState(config.language || language || 'en');
   const [volume, setVolume] = useState(() => soundFX.getVolume());
 
   const handleVolumeChange = (newVal) => {
@@ -28,7 +34,9 @@ export default function SettingsModal({
   const toggleCategory = (catId) => {
     if (selectedCats.includes(catId)) {
       if (selectedCats.length <= 2) {
-        alert('Debes mantener al menos 2 categorías activas para la progresión.');
+        alert(selectedLang === 'es' 
+          ? 'Debes mantener al menos 2 categorías activas para la progresión.' 
+          : 'You must keep at least 2 active categories for challenge progression.');
         return;
       }
       setSelectedCats(selectedCats.filter(id => id !== catId));
@@ -39,20 +47,28 @@ export default function SettingsModal({
 
   const handleSave = () => {
     if (minKills > maxKills) {
-      alert('Las bajas mínimas no pueden superar a las máximas.');
+      alert(selectedLang === 'es'
+        ? 'Las bajas mínimas no pueden superar a las máximas.'
+        : 'Minimum kills cannot exceed maximum kills.');
       return;
     }
     if (minDeaths > maxDeaths) {
-      alert('Las muertes mínimas no pueden superar a las máximas.');
+      alert(selectedLang === 'es'
+        ? 'Las muertes mínimas no pueden superar a las máximas.'
+        : 'Minimum deaths cannot exceed maximum deaths.');
       return;
     }
 
     onSaveConfig({
+      language: selectedLang,
       minKills: Number(minKills),
       maxKills: Number(maxKills),
       minDeaths: Number(minDeaths),
       maxDeaths: Number(maxDeaths)
     });
+    if (onLanguageChange && selectedLang !== language) {
+      onLanguageChange(selectedLang);
+    }
     onChangeActiveCategories(selectedCats);
     onClose();
   };
@@ -66,12 +82,12 @@ export default function SettingsModal({
           <div className="flex items-center gap-2">
             <Sliders className="w-5 h-5 text-[#5bb2d6]" />
             <h3 className="font-bold text-base uppercase tracking-wider text-white">
-              Reglas del Reto de Valorant
+              {t.settingsTitle}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded hover:bg-[#233544] transition-colors"
+            className="text-slate-400 hover:text-white p-1 rounded hover:bg-[#233544] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -80,6 +96,42 @@ export default function SettingsModal({
         {/* Content */}
         <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
           
+          {/* Language Selector */}
+          <div className="bg-[#142230] p-4 rounded-xl border border-[#233544] space-y-3">
+            <div className="flex items-center gap-2.5">
+              <Globe className="w-5 h-5 text-[#5bb2d6]" />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                {t.languageSectionTitle}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedLang('en')}
+                className={`py-2 px-3 rounded-lg border text-xs font-bold flex items-center justify-between cursor-pointer transition-all ${
+                  selectedLang === 'en'
+                    ? 'bg-[#1b3a4b] border-[#5bb2d6] text-white shadow-sm'
+                    : 'bg-[#0f1720] border-[#233544] text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span>English (Default)</span>
+                {selectedLang === 'en' && <Check className="w-4 h-4 text-[#00f59b]" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedLang('es')}
+                className={`py-2 px-3 rounded-lg border text-xs font-bold flex items-center justify-between cursor-pointer transition-all ${
+                  selectedLang === 'es'
+                    ? 'bg-[#1b3a4b] border-[#5bb2d6] text-white shadow-sm'
+                    : 'bg-[#0f1720] border-[#233544] text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span>Español</span>
+                {selectedLang === 'es' && <Check className="w-4 h-4 text-[#00f59b]" />}
+              </button>
+            </div>
+          </div>
+
           {/* Sound Volume Slider */}
           <div className="bg-[#142230] p-4 rounded-xl border border-[#233544] space-y-3">
             <div className="flex items-center justify-between">
@@ -93,10 +145,10 @@ export default function SettingsModal({
                 )}
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-200 block">
-                    Volumen de Efectos de Sonido
+                    {t.soundVolumeTitle}
                   </span>
                   <span className="text-[10px] text-slate-400">
-                    Campanillas de bajas, cambio de arma y victoria
+                    {t.soundVolumeSub}
                   </span>
                 </div>
               </div>
@@ -119,9 +171,9 @@ export default function SettingsModal({
                 type="button"
                 onClick={() => soundFX.playKill(3)}
                 className="px-3 py-1 bg-[#1a2c3d] hover:bg-[#233c54] text-[#5bb2d6] border border-[#233544] rounded text-[11px] font-bold cursor-pointer transition-colors"
-                title="Probar sonido de kill"
+                title={t.testSound}
               >
-                Probar
+                {t.testSound}
               </button>
             </div>
           </div>
@@ -129,11 +181,11 @@ export default function SettingsModal({
           {/* Kills Range */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block mb-2">
-              Rango Aleatorio de Bajas por Arma (Min / Max):
+              {t.killsRangeTitle}
             </label>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[#142230] p-3 rounded border border-[#233544]">
-                <span className="text-[11px] text-slate-400 block mb-1">Mínimo de Kills:</span>
+                <span className="text-[11px] text-slate-400 block mb-1">{t.minKillsLabel}</span>
                 <input
                   type="number"
                   min="1"
@@ -144,7 +196,7 @@ export default function SettingsModal({
                 />
               </div>
               <div className="bg-[#142230] p-3 rounded border border-[#233544]">
-                <span className="text-[11px] text-slate-400 block mb-1">Máximo de Kills:</span>
+                <span className="text-[11px] text-slate-400 block mb-1">{t.maxKillsLabel}</span>
                 <input
                   type="number"
                   min="1"
@@ -156,18 +208,18 @@ export default function SettingsModal({
               </div>
             </div>
             <p className="text-[11px] text-slate-400 mt-1.5">
-              Por defecto: entre 2 y 5 bajas aleatorias en cada arma.
+              {t.killsRangeHelp}
             </p>
           </div>
 
           {/* Deaths Range */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block mb-2">
-              Límite de Muertes Permitidas antes de bajar de rango:
+              {t.deathsRangeTitle}
             </label>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[#142230] p-3 rounded border border-[#233544]">
-                <span className="text-[11px] text-slate-400 block mb-1">Mínimo de Muertes (1 = Hardcore):</span>
+                <span className="text-[11px] text-slate-400 block mb-1">{t.minDeathsLabel}</span>
                 <input
                   type="number"
                   min="1"
@@ -178,7 +230,7 @@ export default function SettingsModal({
                 />
               </div>
               <div className="bg-[#142230] p-3 rounded border border-[#233544]">
-                <span className="text-[11px] text-slate-400 block mb-1">Máximo de Muertes:</span>
+                <span className="text-[11px] text-slate-400 block mb-1">{t.maxDeathsLabel}</span>
                 <input
                   type="number"
                   min="1"
@@ -190,18 +242,19 @@ export default function SettingsModal({
               </div>
             </div>
             <p className="text-[11px] text-slate-400 mt-1.5">
-              En la ronda de pistolas la tolerancia siempre se fija en <strong>3 muertes</strong> para darte 3 intentos antes del cambio de pistola.
+              {t.deathsRangeHelp}
             </p>
           </div>
 
           {/* Active Categories */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-slate-300 block mb-2">
-              Categorías de Armas Incluidas en la Carrera:
+              {t.categoriesTitle}
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {WEAPON_CATEGORIES.map(cat => {
                 const isSelected = selectedCats.includes(cat.id);
+                const categoryTitle = selectedLang === 'es' ? cat.name : (t.categories[cat.id] || cat.categoryDisplay);
                 return (
                   <button
                     key={cat.id}
@@ -214,7 +267,7 @@ export default function SettingsModal({
                     }`}
                   >
                     <div>
-                      <div className="text-xs font-bold font-mono">T{cat.tier} - {cat.name}</div>
+                      <div className="text-xs font-bold font-mono">T{cat.tier} - {categoryTitle}</div>
                       <div className="text-[10px] text-slate-400">{cat.categoryDisplay}</div>
                     </div>
                     {isSelected && <Check className="w-4 h-4 text-[#00f59b]" />}
@@ -232,14 +285,14 @@ export default function SettingsModal({
             onClick={onClose}
             className="px-4 py-2 rounded text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white cursor-pointer"
           >
-            Cancelar
+            {t.cancel}
           </button>
           <button
             onClick={handleSave}
             className="px-5 py-2.5 rounded bg-[#ff4655] hover:bg-[#ff5a67] text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-[#ff4655]/20 flex items-center gap-1.5 cursor-pointer"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Guardar y Aplicar Nueva Ruleta</span>
+            <Check className="w-4 h-4" />
+            <span>{t.saveSettings}</span>
           </button>
         </div>
 

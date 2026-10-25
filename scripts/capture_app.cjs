@@ -19,17 +19,30 @@ app.whenReady().then(async () => {
   const distPath = path.join(__dirname, '..', 'dist', 'index.html');
   await win.loadFile(distPath);
 
+  // Ensure default language is English in localStorage
+  await win.webContents.executeJavaScript(`
+    localStorage.setItem('valorant_roulette_config', JSON.stringify({
+      language: 'en',
+      minKills: 2,
+      maxKills: 5,
+      minDeaths: 1,
+      maxDeaths: 3
+    }));
+  `);
+
   // Wait 1.5s for fonts & SVGs to render
   setTimeout(async () => {
-    // 1. App Dashboard
+    // 1. App Dashboard in English
     const imgDash = await win.capturePage();
     const outDash = path.join(__dirname, '..', 'docs', 'images', 'app_dashboard.png');
     fs.writeFileSync(outDash, imgDash.toPNG());
     console.log('App dashboard captured at:', outDash);
 
-    // 2. Trigger In-Game HUD Toast
+    // 2. Trigger In-Game HUD Toast (English)
     await win.webContents.executeJavaScript(`
-      const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Probar Toast'));
+      const btn = Array.from(document.querySelectorAll('button')).find(b => 
+        b.textContent.includes('HUD 3s') || b.textContent.includes('Probar Toast')
+      );
       if (btn) btn.click();
     `);
 

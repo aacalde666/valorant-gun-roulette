@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Target, Skull } from 'lucide-react';
+import { getTranslation } from '../i18n/translations';
 
 /**
  * InGameToastHUD:
@@ -7,7 +8,8 @@ import { Target, Skull } from 'lucide-react';
  * upon Kills, Deaths, and Weapon switches, then smoothly vanishes.
  * Immune to parent re-render loops using stable ref & toast.id.
  */
-export default function InGameToastHUD({ toast, onClose }) {
+export default function InGameToastHUD({ toast, onClose, language = 'en' }) {
+  const t = getTranslation(language);
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(100);
   
@@ -58,38 +60,38 @@ export default function InGameToastHUD({ toast, onClose }) {
   let borderColor = 'border-[#233544]';
   let glowColor = 'shadow-black/50';
   let badgeBg = 'bg-[#142331] text-[#5bb2d6] border-[#233544]';
-  let headerText = 'ACTUALIZACIÓN';
+  let headerText = t.toastUpdate;
 
   if (isGameStart) {
     borderColor = 'border-[#00f59b]';
     glowColor = 'shadow-[#00f59b]/50';
     badgeBg = 'bg-[#00f59b]/25 text-[#00f59b] border-[#00f59b]/60';
-    headerText = '🎮 ¡COMIENZA LA PARTIDA! EQUIPA TU ARMA';
+    headerText = t.toastMatchStart;
   } else if (isKill) {
     borderColor = 'border-[#ff4655]';
     glowColor = 'shadow-[#ff4655]/30';
     badgeBg = 'bg-[#ff4655]/20 text-[#ff4655] border-[#ff4655]/40';
-    headerText = toast.isStreakComplete ? '🎯 RACHA ALCANZADA' : '🎯 +1 BAJA REGISTRADA';
+    headerText = toast.isStreakComplete ? t.toastStreakAchieved : t.toastKillRegistered;
   } else if (isDeath) {
     borderColor = 'border-rose-600';
     glowColor = 'shadow-rose-600/30';
     badgeBg = 'bg-rose-600/20 text-rose-400 border-rose-600/40';
-    headerText = '💀 MUERTE REGISTRADA';
+    headerText = t.toastDeathRegistered;
   } else if (isReady || isSwitch) {
     borderColor = 'border-[#00f59b]';
     glowColor = 'shadow-[#00f59b]/40';
     badgeBg = 'bg-[#00f59b]/20 text-[#00f59b] border-[#00f59b]/50';
-    headerText = '✨ ¡CAMBIO DE ARMA LISTO!';
+    headerText = t.toastWeaponSwitchReady;
   } else if (isDemote) {
     borderColor = 'border-amber-500';
     glowColor = 'shadow-amber-500/40';
     badgeBg = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
-    headerText = '⚠️ DESCENSO DE RANGO';
+    headerText = t.toastTierDemotion;
   } else if (isVictory) {
     borderColor = 'border-yellow-400';
     glowColor = 'shadow-yellow-400/50';
     badgeBg = 'bg-yellow-400/20 text-yellow-300 border-yellow-400/50';
-    headerText = '🏆 ¡VICTORIA TOTAL EN DEATHMATCH!';
+    headerText = t.toastVictory;
   }
 
   const weapon = toast.weapon || {};
@@ -101,7 +103,7 @@ export default function InGameToastHUD({ toast, onClose }) {
 
   return (
     <aside 
-      aria-label="Notificación en juego"
+      aria-label="In-Game HUD Notification"
       className={`fixed top-5 left-1/2 transform -translate-x-1/2 z-[9999] w-[460px] max-w-[92vw] pointer-events-none transition-all duration-300 ease-out select-none ${
         visible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-4 scale-95'
       }`}
@@ -116,7 +118,7 @@ export default function InGameToastHUD({ toast, onClose }) {
             </span>
           </div>
           <div className="text-slate-400 flex items-center gap-1 text-[10px]">
-            <span>HUD In-Game</span>
+            <span>{t.toastHudBadge}</span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#00f59b] animate-ping" />
           </div>
         </div>
@@ -129,7 +131,7 @@ export default function InGameToastHUD({ toast, onClose }) {
             {weapon.icon ? (
               <img
                 src={weapon.icon}
-                alt={weapon.name || 'Arma'}
+                alt={weapon.name || 'Weapon'}
                 onError={(e) => {
                   if (weapon.fallbackIcon && e.currentTarget.src !== weapon.fallbackIcon) {
                     e.currentTarget.src = weapon.fallbackIcon;
@@ -140,50 +142,71 @@ export default function InGameToastHUD({ toast, onClose }) {
             ) : (
               <Target className="w-6 h-6 text-slate-500" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
           </div>
 
-          {/* Weapon Info */}
+          {/* Weapon Name & Tier Details */}
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-mono text-[#5bb2d6] uppercase tracking-wider truncate">
-              {toast.categoryDisplay || weapon.category || 'Reto Activo'}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.2 rounded bg-[#101b26] text-[#5bb2d6] border border-[#1f3347]">
+                {toast.categoryDisplay || (weapon.category || 'TIER')}
+              </span>
+              <h4 className="text-base font-black uppercase tracking-wide truncate text-white">
+                {weapon.name || 'Arma'}
+              </h4>
             </div>
-            <div className="text-lg font-black uppercase text-white tracking-wide truncate leading-tight">
-              {weapon.name || 'Arma Actual'}
-            </div>
-            <div className="text-[11px] text-slate-300 truncate mt-0.5 font-sans">
-              {toast.submessage || (isReady ? `Al morir, equipa: ${toast.nextWeaponName || 'Siguiente'}` : 'Sigue sumando bajas')}
+
+            {/* Status explanation */}
+            <div className="mt-1 text-xs text-slate-300">
+              {toast.subtitle ? (
+                <span>{toast.subtitle}</span>
+              ) : isVictory ? (
+                <span className="text-yellow-300 font-bold">{language === 'es' ? '¡Todas las armas conquistadas!' : 'All weapons conquered!'}</span>
+              ) : isReady || isSwitch ? (
+                <span className="text-[#00f59b] font-bold">
+                  {language === 'es' ? 'Equipa esta arma al reaparecer' : 'Equip this weapon on respawn'}
+                </span>
+              ) : isDeath ? (
+                <span className="text-rose-300 font-semibold flex items-center gap-1.5">
+                  <Skull className="w-3.5 h-3.5 text-rose-400" />
+                  <span>{t.toastLivesRemaining(remainingLives)}</span>
+                </span>
+              ) : isKill ? (
+                <span className="text-emerald-300 font-semibold flex items-center gap-1.5">
+                  <Target className="w-3.5 h-3.5 text-[#ff4655]" />
+                  <span>
+                    {currentKills >= targetKills
+                      ? t.streakGoalReached
+                      : t.toastKillsToAdvance(targetKills - currentKills, weapon.name || '')}
+                  </span>
+                </span>
+              ) : (
+                <span>{weapon.name}</span>
+              )}
             </div>
           </div>
 
-          {/* Stats Badges */}
-          <div className="flex flex-col items-end gap-1.5 flex-shrink-0 font-mono">
-            {/* Killstreak */}
-            <div className="flex items-center gap-1.5 bg-[#121e2a] px-2.5 py-1 rounded border border-[#233544]">
-              <Target className="w-3.5 h-3.5 text-[#ff4655]" />
-              <span className="text-xs font-bold text-white">
-                <span className="text-[#ff4655] font-black">{currentKills}</span> / {targetKills}
-              </span>
-              <span className="text-[9px] uppercase text-slate-400">Kills</span>
+          {/* Right Counters */}
+          <div className="text-right flex flex-col items-end justify-center pl-2 border-l border-[#1c2c3b]">
+            <div className="text-xs font-mono font-bold text-white flex items-center gap-1">
+              <span className="text-[#ff4655] font-black text-sm">{currentKills}</span>
+              <span className="text-slate-500">/</span>
+              <span className="text-slate-300">{targetKills}</span>
             </div>
-
-            {/* Lives Left */}
-            <div className="flex items-center gap-1.5 bg-[#121e2a] px-2.5 py-1 rounded border border-[#233544]">
-              <Skull className="w-3.5 h-3.5 text-rose-400" />
-              <span className="text-xs font-bold text-white">
-                <span className="text-rose-400 font-black">{remainingLives}</span> / {maxAllowedDeaths}
+            <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1 mt-0.5">
+              <span>{language === 'es' ? 'Vidas:' : 'Lives:'}</span>
+              <span className={`font-bold ${remainingLives <= 1 ? 'text-rose-400 font-black' : 'text-slate-200'}`}>
+                {remainingLives}
               </span>
-              <span className="text-[9px] uppercase text-slate-400">Vidas</span>
             </div>
           </div>
 
         </div>
 
-        {/* 3-Second Depleting Progress Line */}
-        <div className="h-1 bg-[#152331] w-full overflow-hidden">
-          <div
-            className={`h-full transition-all duration-75 ease-linear ${
-              isKill ? 'bg-[#ff4655]' : isReady || isSwitch ? 'bg-[#00f59b]' : isDeath ? 'bg-rose-500' : 'bg-[#5bb2d6]'
+        {/* 3-Second Visual Progress Bar */}
+        <div className="w-full bg-[#0a1017] h-1 overflow-hidden">
+          <div 
+            className={`h-full transition-all ease-linear ${
+              isKill ? 'bg-[#ff4655]' : isDeath ? 'bg-rose-500' : isReady || isSwitch ? 'bg-[#00f59b]' : 'bg-[#5bb2d6]'
             }`}
             style={{ width: `${progress}%` }}
           />

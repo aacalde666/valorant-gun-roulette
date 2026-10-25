@@ -1,5 +1,6 @@
 import React from 'react';
-import { Target, Skull, ArrowRight, RotateCcw, CheckCircle2, AlertOctagon, Sparkles, Shield, AlertTriangle } from 'lucide-react';
+import { Target, Skull, ArrowRight, RotateCcw, CheckCircle2, AlertOctagon, Sparkles, AlertTriangle } from 'lucide-react';
+import { getTranslation } from '../i18n/translations';
 
 export default function ActiveWeaponCard({
   currentStage,
@@ -10,12 +11,15 @@ export default function ActiveWeaponCard({
   onUndo,
   canUndo,
   currentTierIndex,
-  totalTiers
+  totalTiers,
+  language = 'en'
 }) {
+  const t = getTranslation(language);
+
   if (!currentStage) {
     return (
       <div className="bg-[#121c26] border border-[#233544] rounded-lg p-8 text-center text-slate-400">
-        No hay reto activo en este momento.
+        {t.allStagesCompleted}
       </div>
     );
   }
@@ -24,6 +28,10 @@ export default function ActiveWeaponCard({
   const killsNeeded = Math.max(0, currentStage.targetKills - currentStage.currentKills);
   const deathsLeft = Math.max(0, currentStage.maxAllowedDeaths - currentStage.currentDeaths);
   const killProgress = Math.min(100, (currentStage.currentKills / currentStage.targetKills) * 100);
+
+  const categoryName = language === 'es'
+    ? currentStage.categoryName
+    : (t.categories[currentStage.categoryId] || currentStage.categoryDisplay);
 
   return (
     <div className={`bg-[#121c26] border rounded-lg shadow-2xl overflow-hidden transition-all duration-300 ${
@@ -41,18 +49,18 @@ export default function ActiveWeaponCard({
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-[#ff4655] animate-pulse" />
           <span className="font-extrabold uppercase tracking-wider text-xs font-mono">
-            Rango {currentTierIndex + 1} de {totalTiers} : {currentStage.categoryName}
+            {t.tierProgress(currentTierIndex + 1, totalTiers)} : {categoryName}
           </span>
         </div>
 
         {isReadyToSwitch ? (
           <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#00f59b] animate-bounce">
             <Sparkles className="w-4 h-4" />
-            ¡Reto Superado! Esperando Reaparición
+            {t.streakGoalReached}
           </div>
         ) : (
           <div className="text-xs font-mono text-slate-400 flex items-center gap-1">
-            <span>Muertes permitidas antes de descender:</span>
+            <span>{t.deathsAllowedBeforeDemotion}</span>
             <strong className="text-white bg-[#0e1620] px-1.5 py-0.5 rounded border border-[#233544]">
               {deathsLeft}
             </strong>
@@ -107,7 +115,7 @@ export default function ActiveWeaponCard({
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <Target className="w-4 h-4 text-[#ff4655]" />
-                  Bajas Sin Morir (Racha Requerida)
+                  {t.streakLabel}
                 </span>
                 <span className="text-xl font-mono font-black text-white">
                   {currentStage.currentKills} / {currentStage.targetKills}
@@ -128,12 +136,12 @@ export default function ActiveWeaponCard({
 
               <div className="mt-2 text-xs flex justify-between items-center text-slate-400 font-mono">
                 {isReadyToSwitch ? (
-                  <span className="text-[#00f59b] font-bold">¡Objetivo de racha alcanzado!</span>
+                  <span className="text-[#00f59b] font-bold">{t.streakGoalReached}</span>
                 ) : (
-                  <span>Te faltan <strong className="text-white">{killsNeeded}</strong> kills seguidas</span>
+                  <span>{t.needConsecutiveKills(killsNeeded)}</span>
                 )}
                 <span className="text-[10px] text-amber-400 font-sans font-semibold">
-                  {isReadyToSwitch ? '' : '⚠️ Si mueres, vuelve a 0'}
+                  {isReadyToSwitch ? '' : t.ifYouDieResets}
                 </span>
               </div>
             </div>
@@ -147,7 +155,7 @@ export default function ActiveWeaponCard({
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <Skull className="w-4 h-4 text-slate-400" />
-                  Muertes Sufridas (Tolerancia)
+                  {t.livesLabel}
                 </span>
                 <span className="text-lg font-mono font-black text-white">
                   {currentStage.currentDeaths} / {currentStage.maxAllowedDeaths}
@@ -166,7 +174,7 @@ export default function ActiveWeaponCard({
                           ? 'bg-rose-600/80 border-rose-500 shadow-sm shadow-rose-900'
                           : 'bg-[#0f1922] border-[#2a3c4e]'
                       }`}
-                      title={isLost ? 'Muerte consumida' : 'Muerte permitida restante'}
+                      title={isLost ? (language === 'es' ? 'Muerte consumida' : 'Life lost') : (language === 'es' ? 'Vida restante' : 'Life remaining')}
                     />
                   );
                 })}
@@ -176,15 +184,15 @@ export default function ActiveWeaponCard({
                 {currentStage.maxAllowedDeaths === 1 ? (
                   <span className="text-amber-300 flex items-center gap-1">
                     <AlertTriangle className="w-3.5 h-3.5" />
-                    ¡Modo Estricto! No puedes morir ni una sola vez en este arma.
+                    {t.strictMode}
                   </span>
                 ) : deathsLeft === 1 ? (
                   <span className="text-rose-400 font-bold flex items-center gap-1">
                     <AlertOctagon className="w-3.5 h-3.5" />
-                    ¡PELIGRO! Tu próxima muerte te hará bajar al rango anterior.
+                    {t.dangerNextDeathDemote}
                   </span>
                 ) : (
-                  <span>Puedes morir {deathsLeft} veces más antes de perder el rango.</span>
+                  <span>{t.canDieMore(deathsLeft)}</span>
                 )}
               </div>
             </div>
@@ -193,7 +201,7 @@ export default function ActiveWeaponCard({
 
         </div>
 
-        {/* READY TO SWITCH ALERT BANNER (Combate a muerte logic) */}
+        {/* READY TO SWITCH ALERT BANNER */}
         {isReadyToSwitch && (
           <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-[#00f59b]/15 via-[#00f59b]/25 to-[#00f59b]/15 border-2 border-[#00f59b] shadow-xl shadow-[#00f59b]/10 animate-fade-in">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -203,14 +211,12 @@ export default function ActiveWeaponCard({
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-white uppercase tracking-wide">
-                    ¡Misión Cumplida con {currentStage.weapon.name}!
+                    {t.missionAccomplished(currentStage.weapon.name)}
                   </h3>
                   <p className="text-xs sm:text-sm text-emerald-200 mt-0.5">
-                    Como estás en <strong>Combate a Muerte</strong>, no puedes cambiar de arma vivo.
-                    <br />
-                    En tu <strong>próxima muerte</strong> (que <u>NO contará como fallo</u>), compra/equipa:{' '}
+                    {t.deathmatchRespawnNotice}{' '}
                     <strong className="text-white text-base bg-[#0e1f18] px-2 py-0.5 rounded border border-[#00f59b]/40 font-mono">
-                      {nextStage ? nextStage.weapon.name : '¡Última Arma Superada!'}
+                      {nextStage ? nextStage.weapon.name : t.lastWeaponCleared}
                     </strong>
                   </p>
                 </div>
@@ -221,9 +227,9 @@ export default function ActiveWeaponCard({
                 onClick={onConfirmRespawnSwitch}
                 className="w-full sm:w-auto px-6 py-3 rounded bg-[#00f59b] hover:bg-emerald-400 text-[#091510] font-black uppercase tracking-wider text-sm shadow-lg shadow-[#00f59b]/30 flex items-center justify-center gap-2 transition-all transform hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
               >
-                <span>Ya Morí y Equipé {nextStage ? nextStage.weapon.name : 'Victoria'}</span>
+                <span>{t.alreadyDiedAndEquipped(nextStage ? nextStage.weapon.name : null)}</span>
                 <ArrowRight className="w-4 h-4" />
-                <span className="text-[10px] bg-[#091510]/20 px-1.5 py-0.5 rounded font-mono">F11 / Fin</span>
+                <span className="text-[10px] bg-[#091510]/20 px-1.5 py-0.5 rounded font-mono">F11 / End</span>
               </button>
             </div>
           </div>
@@ -244,7 +250,7 @@ export default function ActiveWeaponCard({
               }`}
             >
               <Target className="w-4 h-4" />
-              <span>+1 Kill</span>
+              <span>{t.addKill}</span>
               <span className="text-[10px] bg-black/25 px-1.5 py-0.5 rounded font-mono">F9 / Num +</span>
             </button>
 
@@ -254,7 +260,7 @@ export default function ActiveWeaponCard({
               className="px-4 py-3 rounded font-bold uppercase tracking-wider text-sm bg-[#162330] hover:bg-rose-950/40 text-rose-300 border border-[#2d4052] hover:border-rose-600 transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
             >
               <Skull className="w-4 h-4 text-rose-400" />
-              <span>+1 Muerte</span>
+              <span>{t.addDeath}</span>
               <span className="text-[10px] bg-black/30 px-1.5 py-0.5 rounded font-mono text-slate-400">F10 / Num -</span>
             </button>
           </div>
@@ -268,10 +274,10 @@ export default function ActiveWeaponCard({
                 ? 'bg-[#142331] text-slate-300 border-[#233544] hover:border-[#5bb2d6] hover:text-white cursor-pointer'
                 : 'bg-transparent text-slate-600 border-transparent cursor-not-allowed opacity-40'
             }`}
-            title="Deshacer última kill o muerte registrada (Ctrl+Z)"
+            title={t.undoTitle}
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Deshacer</span>
+            <span>{t.undo}</span>
             <span className="text-[9px] font-mono text-slate-500">Ctrl+Z</span>
           </button>
 
