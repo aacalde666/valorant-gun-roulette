@@ -1,0 +1,81 @@
+{
+  "manifest_version": 1,
+  "type": "WebApp",
+  "meta": {
+    "name": "Valorant Gun Roulette",
+    "version": "1.0.0",
+    "minimum-overwolf-version": "0.190.0",
+    "author": "Community",
+    "description": "Desafío de progresión de armas para Combate a Muerte en Valorant con UI de escritorio y Overlay dentro del juego.",
+    "icon": "icon.png",
+    "icon_gray": "icon_gray.png"
+  },
+  "permissions": [
+    "Hotkeys",
+    "GameInfo"
+  ],
+  "data": {
+    "start_window": "desktop",
+    "hotkeys": {
+      "toggle_challenge_overlay": {
+        "title": "Mostrar/Ocultar Reto de Armas In-Game",
+        "action-type": "toggle",
+        "default": "Ctrl+Shift+X"
+      }
+    },
+    "windows": {
+      "desktop": {
+        "file": "index.html",
+        "size": {
+          "width": 1280,
+          "height": 840
+        },
+        "min_size": {
+          "width": 900,
+          "height": 600
+        },
+        "show_in_taskbar": true,
+        "transparent": false,
+        "resizable": true,
+        "use_hardware_acceleration": true
+      },
+      "in_game": {
+        "file": "index.html",
+        "transparent": true,
+        "resizable": true,
+        "use_hardware_acceleration": true,
+        "size": {
+          "width": 1280,
+          "height": 840
+        },
+        "min_size": {
+          "width": 380,
+          "height": 220
+        },
+        "in_game_only": true,
+        "show_in_taskbar": false,
+        "focus_game_takeover": "ReleaseOnHidden"
+      }
+    },
+    "game_targeting": {
+      "type": "dedicated",
+      "game_ids": [
+        21640
+      ]
+    },
+    "game_events": [
+      21640
+    ],
+    "launch_events": [
+      {
+        "event": "GameLaunch",
+        "event_data": {
+          "game_ids": [
+            21640
+          ]
+        },
+        "start_minimized": false
+      }
+    ]
+  }
+}
